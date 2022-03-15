@@ -6,14 +6,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-
     container_name: app
     restart: unless-stopped
     tty: true
     working_dir: /var/www
-
-    # ports:
-    #   - "80:8000"
+    depends_on:
+      - db
     volumes:
       - ./src:/var/www
       - ./docker-files/php/local.ini:/usr/local/etc/php/conf.d/local.ini
@@ -27,36 +25,46 @@ services:
     container_name: webserver
     restart: unless-stopped
     tty: true
-
     ports:
       - "80:80"
       - "8143:443"
-
     volumes:
       - ./src:/var/www
       - ./docker-files/nginx/conf.d/:/etc/nginx/conf.d/
-
+    depends_on:
+      - app
     networks:
       - app-network
 
-  # MariaDB - Service
+  # mysql - Service
   db:
     image: mysql:5.7
     container_name: db
     restart: unless-stopped
     tty: true
-
     ports:
       - "3306:3306"
-
     environment:
       MYSQL_DATABASE: laravel
       MYSQL_ROOT_PASSWORD: 123456
-
     volumes:
       - mysqldbdata:/var/lib/mysql
       - ./docker-files/mysql/my.cnf:/etc/mysql/my.cnf
+    networks:
+      - app-network
 
+
+  #PhpMyAdmin
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: "pma"
+    restart: always
+    ports:
+      - 8080:80
+    environment:
+      - PMA_ARBITRARY=1
+    depends_on:
+      - db
     networks:
       - app-network
 
