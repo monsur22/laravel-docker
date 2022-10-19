@@ -19,7 +19,43 @@ services:
     networks:
       - app-network
 
-  # NGINX - Service
+  # PHP-FPM - Service
+  doctor:
+    build:
+      context: .
+      dockerfile: Dockerfile.doctor
+    container_name: doctor
+    restart: unless-stopped
+    tty: true
+    # ports:
+    #   - "8001:80"
+    working_dir: /var/www
+    depends_on:
+      - db
+    volumes:
+      - ./apptest:/var/www
+      - ./docker-files/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+
+    networks:
+      - app-network
+
+        # NGINX - Service
+  doc_nginx:
+    image: nginx:alpine
+    container_name: doc_nginx
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "8001:80"
+    volumes:
+      - ./apptest:/var/www
+      - ./docker-files/doc_nginx/conf.d/:/etc/doc_nginx/conf.d/
+    depends_on:
+      - doctor
+    networks:
+      - app-network
+
+  # NGINX - Service doc_nginx
   webserver:
     image: nginx:alpine
     container_name: webserver
@@ -45,7 +81,7 @@ services:
     ports:
       - "3306:3306"
     environment:
-      MYSQL_DATABASE: laravel
+      MYSQL_DATABASE: microservice
       MYSQL_ROOT_PASSWORD: 123456
     volumes:
       - mysqldbdata:/var/lib/mysql
@@ -62,12 +98,22 @@ services:
     ports:
       - 8080:80
     environment:
-      - PMA_ARBITRARY=1
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_USER: "root"
+      PMA_PASSWORD: "123456"
+      PMA_ARBITRARY: 1
     depends_on:
       - db
     networks:
       - app-network
 
+  mailhog:
+      image: mailhog/mailhog
+      container_name: "mailhog"
+      ports:
+        - "1025:1025"
+        - "8025:8025"
 # Volumes
 volumes:
   mysqldbdata:
