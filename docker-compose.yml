@@ -5,25 +5,86 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.service_1
+    container_name: service_1
     ports:
-      - 8000:80
+      - 8001:80
     volumes:
       - ./service_1:/var/www/html
+    networks:
+      - app-network
 
   service_2:
     build:
       context: .
       dockerfile: Dockerfile.service_2
+    container_name: service_2
     ports:
-      - 80:80
+      - 8002:80
     volumes:
       - ./service_2:/var/www/html
+    networks:
+      - app-network
 
   service_3:
     build:
       context: .
       dockerfile: Dockerfile.service_3
+    container_name: service_3
     ports:
-      - 88:80
+      - 8003:80
     volumes:
       - ./service_3:/var/www/html
+    networks:
+      - app-network
+
+  # mysql - Service
+  db:
+    image: mysql:5.7
+    container_name: db
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: laravel
+      MYSQL_ROOT_PASSWORD: 123456
+    volumes:
+      - mysqldbdata:/var/lib/mysql
+      - ./mysql/my.cnf:/etc/mysql/my.cnf
+    networks:
+      - app-network
+
+
+  #PhpMyAdmin
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: "pma"
+    restart: always
+    ports:
+      - 8080:80
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_USER: "root"
+      PMA_PASSWORD: "123456"
+      PMA_ARBITRARY: 1
+    depends_on:
+      - db
+    networks:
+      - app-network
+
+  mailhog:
+      image: mailhog/mailhog
+      container_name: "mailhog"
+      ports:
+        - "1025:1025"
+        - "8025:8025"
+# Volumes
+volumes:
+  mysqldbdata:
+    driver: local
+
+# Networks
+networks:
+  app-network:
+    driver: bridge
