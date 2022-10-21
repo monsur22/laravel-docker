@@ -1,125 +1,29 @@
 version: '3.8'
 
 services:
-  # PHP-FPM - Service
-  app:
+  service_1:
     build:
       context: .
-      dockerfile: Dockerfile
-    container_name: app
-    restart: unless-stopped
-    tty: true
-    working_dir: /var/www
-    depends_on:
-      - db
+      dockerfile: Dockerfile.service_1
+    ports:
+      - 8000:80
     volumes:
-      - ./src:/var/www
-      - ./docker-files/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+      - ./service_1:/var/www/html
 
-    networks:
-      - app-network
-
-  # PHP-FPM - Service
-  doctor:
+  service_2:
     build:
       context: .
-      dockerfile: Dockerfile.doctor
-    container_name: doctor
-    restart: unless-stopped
-    tty: true
-    # ports:
-    #   - "8001:80"
-    working_dir: /var/www
-    depends_on:
-      - db
-    volumes:
-      - ./apptest:/var/www
-      - ./docker-files/php/local.ini:/usr/local/etc/php/conf.d/local.ini
-
-    networks:
-      - app-network
-
-        # NGINX - Service
-  doc_nginx:
-    image: nginx:alpine
-    container_name: doc_nginx
-    restart: unless-stopped
-    tty: true
+      dockerfile: Dockerfile.service_2
     ports:
-      - "8001:80"
+      - 80:80
     volumes:
-      - ./apptest:/var/www
-      - ./docker-files/doc_nginx/conf.d/:/etc/doc_nginx/conf.d/
-    depends_on:
-      - doctor
-    networks:
-      - app-network
+      - ./service_2:/var/www/html
 
-  # NGINX - Service doc_nginx
-  webserver:
-    image: nginx:alpine
-    container_name: webserver
-    restart: unless-stopped
-    tty: true
+  service_3:
+    build:
+      context: .
+      dockerfile: Dockerfile.service_3
     ports:
-      - "80:80"
-      - "8143:443"
+      - 88:80
     volumes:
-      - ./src:/var/www
-      - ./docker-files/nginx/conf.d/:/etc/nginx/conf.d/
-    depends_on:
-      - app
-    networks:
-      - app-network
-
-  # mysql - Service
-  db:
-    image: mysql:5.7
-    container_name: db
-    restart: unless-stopped
-    tty: true
-    ports:
-      - "3306:3306"
-    environment:
-      MYSQL_DATABASE: microservice
-      MYSQL_ROOT_PASSWORD: 123456
-    volumes:
-      - mysqldbdata:/var/lib/mysql
-      - ./docker-files/mysql/my.cnf:/etc/mysql/my.cnf
-    networks:
-      - app-network
-
-
-  #PhpMyAdmin
-  phpmyadmin:
-    image: phpmyadmin/phpmyadmin:latest
-    container_name: "pma"
-    restart: always
-    ports:
-      - 8080:80
-    environment:
-      PMA_HOST: db
-      PMA_PORT: 3306
-      PMA_USER: "root"
-      PMA_PASSWORD: "123456"
-      PMA_ARBITRARY: 1
-    depends_on:
-      - db
-    networks:
-      - app-network
-
-  mailhog:
-      image: mailhog/mailhog
-      container_name: "mailhog"
-      ports:
-        - "1025:1025"
-        - "8025:8025"
-# Volumes
-volumes:
-  mysqldbdata:
-    driver: local
-
-# Networks
-networks:
-  app-network:
-    driver: bridge
+      - ./service_3:/var/www/html
