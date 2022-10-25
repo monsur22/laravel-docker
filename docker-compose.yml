@@ -10,6 +10,7 @@ services:
       - 8001:80
     volumes:
       - ./service_1:/var/www/html
+    working_dir: /var/www/html
     networks:
       - app-network
 
@@ -37,7 +38,6 @@ services:
     networks:
       - app-network
 
-  # mysql - Service
   db:
     image: mysql:5.7
     container_name: db
@@ -74,11 +74,14 @@ services:
       - app-network
 
   mailhog:
-      image: mailhog/mailhog
-      container_name: "mailhog"
-      ports:
-        - "1025:1025"
-        - "8025:8025"
+    image: mailhog/mailhog
+    container_name: "mailhog"
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - app-network
+
 # Volumes
 volumes:
   mysqldbdata:
