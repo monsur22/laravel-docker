@@ -7,6 +7,7 @@ use App\Mail\PasswordResetMail;
 use App\Mail\PasswordUpdateMail;
 use App\Mail\RegistrationCompleteMail;
 use App\Mail\RegistrationMail;
+use App\Models\PasswordReset;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -125,10 +126,22 @@ class AuthController extends Controller
         $confirm_code = Str::random(32);
         $exist_user = User::where('email', $request->email)->first();
         if ($exist_user && $exist_user->email_verified_at != null) {
-            User::where('email', $request->email)->update(array_merge(
+            $token_exitst = PasswordReset::where('email', $request->email)->first();
+            if($token_exitst){
+                PasswordReset::where('email', $request->email)->update(array_merge(
                 $validator->validated(),
-                ['confirm_code' => $confirm_code]
+                ['token' => $confirm_code]
             ));
+            }else {
+                PasswordReset::create(array_merge(
+                    $validator->validated(),
+                    [
+                        'email' => $request->email,
+                        'token' => $confirm_code,
+                    ]
+                ));
+            }
+
             Mail::to($exist_user->email)->send(new PasswordResetMail($exist_user, $confirm_code));
             if (Mail::flushMacros()) {
                 return response()->json('Sorry! Please try again latter');
@@ -143,22 +156,21 @@ class AuthController extends Controller
 
     public function updatePassword($confirm_code, Request $request)
     {
-
         $validator = Validator::make($request->all(), [
             'password' => 'required|string|confirmed|min:5',
         ]);
         if ($validator->fails()) {
             return response()->json($validator->errors(), 422);
         }
-        $user_details = User::where('confirm_code', $confirm_code)->first();
-        if (empty($user_details) || $user_details->email_verified_at == null) {
-            return response()->json('Complete Registration First');
+        $token_details = PasswordReset::where( 'token',$confirm_code)->first();
+        if (empty($token_details)) {
+            return response()->json('Invalid Token');
         }
-        $user = User::where('confirm_code', $confirm_code)
+        User::where('email', $token_details->email)
             ->first()
             ->update(['password' => bcrypt($request->password)]);
-
-        Mail::to($user_details->email)->send(new PasswordUpdateMail($user_details));
+        PasswordReset::where('email',$token_details->email)->delete();
+        Mail::to($token_details->email)->send(new PasswordUpdateMail($token_details));
         if (Mail::flushMacros()) {
             return response()->json('Sorry! Please try again latter');
         } else {
