@@ -32,7 +32,6 @@ class AuthController extends Controller
             'password' => 'required|string|confirmed|min:5',
         ]);
 
-
         if ($validator->fails()) {
             return response()->json($validator->errors(), 422);
         }
@@ -40,12 +39,7 @@ class AuthController extends Controller
         $exist_user = User::where('email', $request->email)->first();
         if ($exist_user && $exist_user->email_verified_at == null) {
             User::where('email', $request->email)->update(['confirm_code' => $confirm_code]);
-            Mail::to($exist_user->email)->send(new RegistrationMail($exist_user, $confirm_code));
-            if (Mail::flushMacros()) {
-                return response()->json('Sorry! Please try again latter');
-            } else {
-                return response()->json('Great! Successfully send in your mail');
-            }
+            $this->confirmMail($exist_user,$confirm_code);
         }
         $user = User::create(array_merge(
             $validator->validated(),
@@ -55,11 +49,7 @@ class AuthController extends Controller
             ]
         ));
         Mail::to($user->email)->send(new RegistrationMail($user, $confirm_code));
-        if (Mail::flushMacros()) {
-            return response()->json('Sorry! Please try again latter');
-        } else {
-            return response()->json('Great! Successfully send in your mail');
-        }
+        $this->mailResponse();
         return response()->json([
             'message' => 'User registered successfully',
             'user' => $user,
@@ -127,12 +117,13 @@ class AuthController extends Controller
         $exist_user = User::where('email', $request->email)->first();
         if ($exist_user && $exist_user->email_verified_at != null) {
             $token_exitst = PasswordReset::where('email', $request->email)->first();
-            if($token_exitst){
+            if ($token_exitst) {
                 PasswordReset::where('email', $request->email)->update(array_merge(
-                $validator->validated(),
-                ['token' => $confirm_code]
-            ));
-            }else {
+                    $validator->validated(),
+                    ['token' => $confirm_code]
+                ));
+            }
+            else {
                 PasswordReset::create(array_merge(
                     $validator->validated(),
                     [
@@ -141,13 +132,9 @@ class AuthController extends Controller
                     ]
                 ));
             }
+            $this->resetConfirmMail($exist_user,$confirm_code);
+            return response()->json(['message' => 'Reset email send'], 200);
 
-            Mail::to($exist_user->email)->send(new PasswordResetMail($exist_user, $confirm_code));
-            if (Mail::flushMacros()) {
-                return response()->json('Sorry! Please try again latter');
-            } else {
-                return response()->json('Great! Successfully send in your mail');
-            }
         } elseif ($exist_user && $exist_user->email_verified_at == null) {
             return response()->json(['error' => 'Your have not verified your open account.'], 401);
         }
@@ -162,20 +149,7 @@ class AuthController extends Controller
         if ($validator->fails()) {
             return response()->json($validator->errors(), 422);
         }
-        $token_details = PasswordReset::where( 'token',$confirm_code)->first();
-        if (empty($token_details)) {
-            return response()->json('Invalid Token');
-        }
-        User::where('email', $token_details->email)
-            ->first()
-            ->update(['password' => bcrypt($request->password)]);
-        PasswordReset::where('email',$token_details->email)->delete();
-        Mail::to($token_details->email)->send(new PasswordUpdateMail($token_details));
-        if (Mail::flushMacros()) {
-            return response()->json('Sorry! Please try again latter');
-        } else {
-            return response()->json('Password update Successfully');
-        }
+        $this->existResetToken($confirm_code,$request);
         return response()->json(['message' => 'Update your Password'], 200);
     }
 
@@ -184,10 +158,43 @@ class AuthController extends Controller
         $request->user()->currentAccessToken()->delete();
         return response()->json(['status' => 'success', 'message' => 'User logged out successfully']);
     }
-    /**
-     * Get the Auth user using token.
-     * @return \Illuminate\Http\JsonResponse
-     */
+
+    public function existResetToken($confirm_code,Request $request){
+        $token_details = PasswordReset::where('token', $confirm_code)->first();
+        if (empty($token_details)) {
+            return response()->json('Invalid Token');
+        }
+        User::where('email', $token_details->email)
+            ->first()
+            ->update(['password' => bcrypt($request->password)]);
+        PasswordReset::where('email', $token_details->email)->delete();
+        Mail::to($token_details->email)->send(new PasswordUpdateMail($token_details));
+        $this->mailResponse();
+
+    }
+
+    public function confirmMail($exist_user,$confirm_code){
+        Mail::to($exist_user->email)->send(new RegistrationMail($exist_user, $confirm_code));
+        $this->mailResponse();
+    }
+
+    public function resetConfirmMail($exist_user,$confirm_code)
+    {
+        Mail::to($exist_user->email)->send(new PasswordResetMail($exist_user, $confirm_code));
+        $this->mailResponse();
+    }
+
+    public function mailResponse()
+    {
+        if (Mail::flushMacros()) {
+            return response()->json('Sorry! Please try again latter');
+        } else {
+            return response()->json('Great! Successfully Done');
+        }
+    }
+
+
+
     public function user()
     {
         return response()->json(auth()->user());
