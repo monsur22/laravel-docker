@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class UpdateRequest extends FormRequest
 {
@@ -13,7 +15,7 @@ class UpdateRequest extends FormRequest
      */
     public function authorize()
     {
-        return false;
+        return true;
     }
 
     /**
@@ -24,7 +26,24 @@ class UpdateRequest extends FormRequest
     public function rules()
     {
         return [
-            //
+            'password' => 'required|string|confirmed|min:5',
+        ];
+    }
+
+    public function failedValidation(Validator $validator)
+    {
+        throw new HttpResponseException(response()->json([
+            'success'   => false,
+            'message'   => 'Validation errors',
+            'data'      => $validator->errors()
+        ]));
+
+    }
+    public function messages()
+    {
+        return [
+            'password.required' => 'This field is required.',
+            'password.confirmed' => 'Password and Confirm Password must be same.',
         ];
     }
 }
