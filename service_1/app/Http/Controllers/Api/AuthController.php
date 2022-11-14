@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRegister;
 use App\Http\Requests\RegistrationRequest;
+use App\Http\Requests\ResetRequest;
 use App\Http\Requests\UpdateRequest;
 use App\Mail\PasswordResetMail;
 use App\Mail\PasswordUpdateMail;
@@ -97,23 +98,16 @@ class AuthController extends Controller
         ], 200);
     }
 
-    public function resetPassword(Request $request)
+    public function resetPassword(ResetRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|email'
-        ]);
         $confirm_code = Str::random(32);
         $exist_user = User::where('email', $request->email)->first();
         if ($exist_user && $exist_user->email_verified_at != null) {
             $token_exitst = PasswordReset::where('email', $request->email)->first();
             if ($token_exitst) {
-                PasswordReset::where('email', $request->email)->update(array_merge(
-                    $validator->validated(),
-                    ['token' => $confirm_code]
-                ));
+                PasswordReset::where('email', $request->email)->update('token', $confirm_code);
             } else {
                 PasswordReset::create(array_merge(
-                    $validator->validated(),
                     [
                         'email' => $request->email,
                         'token' => $confirm_code,
