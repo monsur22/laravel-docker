@@ -20,7 +20,7 @@ Route::group(['middleware' => 'api','prefix'=>'auth'], function ($router) {
     Route::post('/register', [AuthController::class, 'createUser']);
     Route::post('/login', [AuthController::class, 'loginUser']);
     Route::post('/logout', [AuthController::class, 'logout']);
-    Route::get('/email-verify/{confirm_code}', [AuthController::class, 'registerVerify']);
+    Route::get('/email-verify/{confirm_code}', [AuthController::class, 'verifyRegistration']);
     Route::post('/reset-password', [AuthController::class, 'resetPassword']);
     Route::post('/reset-password/{confirm_code}', [AuthController::class, 'updatePassword']);
 
