@@ -7,13 +7,13 @@ use App\Http\Requests\LoginRegister;
 use App\Http\Requests\RegistrationRequest;
 use App\Http\Requests\ResetRequest;
 use App\Http\Requests\UpdateRequest;
-use App\Services\AuthService;
+use App\Services\AuthServiceInterface;
 use Illuminate\Http\Request;
 
 class AuthController extends Controller
 {
     protected $authService;
-    public function __construct(AuthService $authService)
+    public function __construct(AuthServiceInterface $authService)
     {
         $this->middleware('auth:sanctum', ['except' => ['loginUser', 'createUser', 'verifyRegistration', 'resetPassword', 'updatePassword']]);
         $this->authService = $authService;

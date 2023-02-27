@@ -52,14 +52,14 @@ class AuthRepositoryImpl implements AuthRepositoryInterface
     {
         return PasswordReset::where('token', $confirm_code)->first();
     }
-    public function updatePassword(string $email, string $password): string
+    public function updatePassword(string $email, string $password): void
     {
-        return User::where('email', $email)
+        User::where('email', $email)
             ->first()
             ->update(['password' => bcrypt($password)]);
     }
-    public function deleteToken(string $email): string
+    public function deleteToken(string $email): void
     {
-        return PasswordReset::where('email', $email)->delete();
+        PasswordReset::where('email', $email)->delete();
     }
 }

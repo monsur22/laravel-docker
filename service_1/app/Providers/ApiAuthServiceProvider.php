@@ -3,7 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use App\Services\AuthService;
+use App\Services\AuthServiceInterface;
 use App\Services\Impl\AuthServiceImpl;
 use App\Repositories\AuthRepositoryInterface;
 use App\Repositories\Impl\AuthRepositoryImpl;
@@ -17,7 +17,7 @@ class ApiAuthServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->app->bind(AuthService::class, AuthServiceImpl::class);
+        $this->app->bind(AuthServiceInterface::class, AuthServiceImpl::class);
         $this->app->bind(AuthRepositoryInterface::class, AuthRepositoryImpl::class);
     }
 

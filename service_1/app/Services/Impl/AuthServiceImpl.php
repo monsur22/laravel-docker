@@ -6,14 +6,14 @@ use App\Mail\RegistrationMail;
 use App\Models\User;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
-use App\Services\AuthService;
+use App\Services\AuthServiceInterface;
 use App\Mail\PasswordResetMail;
 use App\Mail\PasswordUpdateMail;
 use App\Mail\RegistrationCompleteMail;
 use App\Repositories\AuthRepositoryInterface;
 use Illuminate\Support\Facades\Auth;
 
-class AuthServiceImpl implements AuthService
+class AuthServiceImpl implements AuthServiceInterface
 {
     protected $authRepository;
 

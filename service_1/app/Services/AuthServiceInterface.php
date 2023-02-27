@@ -3,7 +3,7 @@
 namespace App\Services;
 use App\Models\User;
 
-interface AuthService
+interface AuthServiceInterface
 {
     public function createUser($request);
     public function sendConfirmationEmail($exist_user, $confirm_code);

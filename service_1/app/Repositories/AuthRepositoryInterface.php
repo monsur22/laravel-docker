@@ -15,6 +15,6 @@ interface AuthRepositoryInterface
     public function updateTokenByEmail(string $email, string $confirm_code): string;
     public function createResetToken(string $email, string $confirm_code): string;
     public function findByToken(string $confirm_code): ?PasswordReset;
-    public function updatePassword(string $email,string $password): string;
-    public function deleteToken(string $email): string;
+    public function updatePassword(string $email,string $password): void;
+    public function deleteToken(string $email): void;
 }
