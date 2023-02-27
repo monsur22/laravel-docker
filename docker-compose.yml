@@ -1,42 +1,43 @@
 version: '3.8'
 
 services:
-  # PHP-FPM - Service
-  app:
+  service_1:
     build:
       context: .
-      dockerfile: Dockerfile
-    container_name: app
-    restart: unless-stopped
-    tty: true
-    working_dir: /var/www
-    depends_on:
-      - db
-    volumes:
-      - ./src:/var/www
-      - ./docker-files/php/local.ini:/usr/local/etc/php/conf.d/local.ini
-
-    networks:
-      - app-network
-
-  # NGINX - Service
-  webserver:
-    image: nginx:alpine
-    container_name: webserver
-    restart: unless-stopped
-    tty: true
+      dockerfile: Dockerfile.service_1
+    container_name: service_1
     ports:
-      - "80:80"
-      - "8143:443"
+      - 8001:80
     volumes:
-      - ./src:/var/www
-      - ./docker-files/nginx/conf.d/:/etc/nginx/conf.d/
-    depends_on:
-      - app
+      - ./service_1:/var/www/html
+    working_dir: /var/www/html
     networks:
       - app-network
 
-  # mysql - Service
+  service_2:
+    build:
+      context: .
+      dockerfile: Dockerfile.service_2
+    container_name: service_2
+    ports:
+      - 8002:80
+    volumes:
+      - ./service_2:/var/www/html
+    networks:
+      - app-network
+
+  service_3:
+    build:
+      context: .
+      dockerfile: Dockerfile.service_3
+    container_name: service_3
+    ports:
+      - 8003:80
+    volumes:
+      - ./service_3:/var/www/html
+    networks:
+      - app-network
+
   db:
     image: mysql:5.7
     container_name: db
@@ -49,7 +50,7 @@ services:
       MYSQL_ROOT_PASSWORD: 123456
     volumes:
       - mysqldbdata:/var/lib/mysql
-      - ./docker-files/mysql/my.cnf:/etc/mysql/my.cnf
+      - ./mysql/my.cnf:/etc/mysql/my.cnf
     networks:
       - app-network
 
@@ -62,9 +63,22 @@ services:
     ports:
       - 8080:80
     environment:
-      - PMA_ARBITRARY=1
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_USER: "root"
+      PMA_PASSWORD: "123456"
+      PMA_ARBITRARY: 1
     depends_on:
       - db
+    networks:
+      - app-network
+
+  mailhog:
+    image: mailhog/mailhog
+    container_name: "mailhog"
+    ports:
+      - "1025:1025"
+      - "8025:8025"
     networks:
       - app-network
 
