@@ -7,7 +7,7 @@ interface AuthServiceInterface
 {
     public function createUser($request);
     public function sendConfirmationEmail($exist_user, $confirm_code);
-    public function verifyRegistration($confirm_code);
+    public function verifyRegistration($confirm_code,$request);
     public function loginUser($request);
     public function resetPassword($request);
     public function updatePassword($confirm_code, $request);

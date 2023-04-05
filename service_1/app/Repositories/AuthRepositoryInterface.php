@@ -10,6 +10,7 @@ interface AuthRepositoryInterface
     public function findUserByEmail(string $email): ?User;
     public function updateUserConfirmCodeByEmail(string $email, string $confirmCode): string;
     public function createUser(array $data): User;
+    public function verifyEmail(User $user, string $password): void;
     public function findByConfirmCode(string $confirm_code): ?User;
     public function tokenfindByEmail(string $email): ?PasswordReset;
     public function updateTokenByEmail(string $email, string $confirm_code): string;
