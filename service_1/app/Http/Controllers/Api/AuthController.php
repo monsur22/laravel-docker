@@ -7,6 +7,7 @@ use App\Http\Requests\LoginRegister;
 use App\Http\Requests\RegistrationRequest;
 use App\Http\Requests\ResetRequest;
 use App\Http\Requests\UpdateRequest;
+use App\Http\Requests\VerifyEmailRequest;
 use App\Services\AuthServiceInterface;
 use Illuminate\Http\Request;
 
@@ -40,9 +41,9 @@ class AuthController extends Controller
     | If okay verified otherwise Email already verified.
     -----------------------------------------------------------------
     */
-    public function verifyRegistration($confirm_code)
+    public function verifyRegistration($confirm_code,VerifyEmailRequest $request)
     {
-        $user = $this->authService->verifyRegistration($confirm_code);
+        $user = $this->authService->verifyRegistration($confirm_code,$request);
         return $user;
     }
     /*

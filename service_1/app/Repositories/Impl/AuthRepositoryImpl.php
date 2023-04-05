@@ -19,9 +19,7 @@ class AuthRepositoryImpl implements AuthRepositoryInterface
     public function createUser(array $userData): User
     {
         return User::create([
-            'name' => $userData['name'],
             'email' => $userData['email'],
-            'password' => bcrypt($userData['password']),
             'confirm_code' => $userData['confirm_code'],
         ]);
     }
@@ -61,5 +59,9 @@ class AuthRepositoryImpl implements AuthRepositoryInterface
     public function deleteToken(string $email): void
     {
         PasswordReset::where('email', $email)->delete();
+    }
+    public function verifyEmail(User $user, string $password): void
+    {
+        $user->update(['password' => bcrypt($password)]);
     }
 }

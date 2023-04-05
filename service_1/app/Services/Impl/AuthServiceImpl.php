@@ -36,9 +36,7 @@ class AuthServiceImpl implements AuthServiceInterface
             return $this->sendConfirmationEmail($exist_user, $confirm_code);
         }
         $userData = [
-            'name' => $request->input('name'),
             'email' => $request->input('email'),
-            'password' => $request->input('password'),
             'confirm_code' => $confirm_code,
         ];
         $user = $this->authRepository->createUser($userData);
@@ -69,7 +67,7 @@ class AuthServiceImpl implements AuthServiceInterface
     | Please focus on controller comment detials.
     ----------------------------------------------
     */
-    public function verifyRegistration($confirm_code)
+    public function verifyRegistration($confirm_code, $request)
     {
         $user = $this->authRepository->findByConfirmCode($confirm_code);
         if (!$user) {
@@ -77,6 +75,7 @@ class AuthServiceImpl implements AuthServiceInterface
         }
         if ($this->isAccountNotVerified($user)) {
             $user->markEmailAsVerified();
+            $this->authRepository->verifyEmail($user, $request->input('password'));
             try {
                 Mail::to($user->email)->send(new RegistrationCompleteMail($user));
             } catch (\Exception $e) {
@@ -85,7 +84,7 @@ class AuthServiceImpl implements AuthServiceInterface
                 ], 500);
             }
             return response()->json([
-                "msg" => "Email  verified.",
+                "msg" => "Email verified and password updated.",
                 'token' => $user->createToken("API TOKEN")->plainTextToken,
                 'token_type' => 'Bearer',
             ], 200);
